@@ -243,14 +243,14 @@ cv2.morphologyEx(img, cv.MORPH_TOPHAT, kernel)
 cv2.morphologyEx(img, cv.MORPH_BLACKHAT, kernel)
 ```
 
-#### 3. 图像平滑
+### 图像平滑
 
-##### 图像噪声
+#### 1. 图像噪声
 
 + 椒盐噪声：图像中随机出现的白点或者黑点
 + 高斯噪声：噪声的概率密度分布使正态分布
 
-##### 图像平滑
+#### 2. 图像平滑
 
 从信号处理的角度看就是去除其中的高频，保留低频；即可以使用低通滤波器
 
@@ -283,10 +283,9 @@ cv2.morphologyEx(img, cv.MORPH_BLACKHAT, kernel)
 
 + 双边滤波
 
+### 直方图
 
-#### 4. 直方图
-
-##### 灰度直方图
+#### 1. 灰度直方图
 
 横坐标为灰度值
 
@@ -301,7 +300,7 @@ cv2.calcHist(images, channels, mask, histSize, ranges[,hist[,accumulate]])
 cv2.calcHist([img], [0], None, [256], [0,256])
 ```
 
-**掩膜的应用**
+#### 2. 掩膜的应用
 
 `掩膜` 是用选定的图像、图形或物体，对要处理的图像进行遮挡，来控制图像处理的区域
 
@@ -309,7 +308,7 @@ cv2.calcHist([img], [0], None, [256], [0,256])
 
 步骤：1、以灰度图读取图像；2、创建蒙版（设置为0、1）；3、进行掩膜；4、统计掩膜后的灰度直方图
 
-##### 直方图均衡化
+#### 3. 直方图均衡化
 
 对图像进行非线性拉伸，重新分配图像像素值，使一定灰度范围内的像素数量大致相同
 
@@ -330,7 +329,7 @@ clahe = cv.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
 cl = clahe.apply(img)
 ```
 
-#### 5. 边缘检测
+### 边缘检测
 
 目的：标识数字图像中亮度明显变化的点
 
@@ -339,7 +338,7 @@ cl = clahe.apply(img)
 + 基于搜索：通过寻找图像一阶导数中的最大值来检测边界，然后利用计算结果估计边缘的局部方向，通常采用梯度的方向，并利用此方向找到局部梯度模的最大值；代表算法：Sobel算子、Scharr算子
 + 基于零穿越：通过寻找图像二阶导数零穿越来寻找边界；代表算法：Laplacian算子
 
-**Sobel算子**
+#### 1. Sobel算子
 
 ```python
 Sobel_x_or_y = cv2.Sobel(src, ddepth, dx, dy, dst, ksize, scale, delta, borderType)
@@ -357,7 +356,7 @@ Scale_absY = cv.convertScaleAbs(y)
 result = cv.addWeighted(Scale_absX, 0.5, Scale_absY, 0.5, 0)
 ```
 
-**Laplacian算子**
+#### 2. Laplacian算子
 
 ```python
 Laplacian(src, dst, ddepth, ksize=1, scale=1, delta=0, borderType)
@@ -368,7 +367,7 @@ result = cv.Laplacian(img, cv.CV_16S)
 Scale_abs = cv.convertScaleAbs(result)
 ```
 
-**Canny边缘检测**
+#### 3. Canny边缘检测
 
 第一步：噪声去除——使用5*5高斯滤波器去除噪声
 第二步：计算图像梯度——使用Sobel算子获得x,y两个方向上的一阶导数，从而得到边界的梯度和方向
@@ -383,9 +382,9 @@ $$
 cv2.Canny(img, threshold1, threshold2) # 需要是灰度图
 ```
 
-#### 6. 模板匹配与霍夫变换
+### 模板匹配与霍夫变换
 
-##### 模板匹配
+#### 1. 模板匹配
 
 是在给定的图片中查找和模板最相似的区域——利用滑窗思想，最终将匹配度最高的区域选择为最后的结果
 
@@ -398,7 +397,9 @@ cv2.matchTemplate(img, template, method)
 # CV_TM_CCOEFF: 利用相关系数匹配
 ```
 
-##### 霍夫变换
+#### 2. 霍夫变换
+
+##### **线检测**
 
 常用于提取图像中的直线和圆等几何形状
 
@@ -412,3 +413,101 @@ cv2.matchTemplate(img, template, method)
 $$
 xcos\theta+ysin\theta=\rho
 $$
+
+```python
+cv2.HoughLines(img, rho, theta, threshold) # img 要求是二值化的图像，所以在调用霍夫变换之前需要进行二值化或者进行Canny边缘检测
+
+# 示例
+img = cv.imread('image.jpg',0)
+edges = cv.Canny(img,50,150)
+lines = cv.HoughLines(edges,0.8,np.pi/180,150)
+```
+
+##### **圆检测**
+
+第一阶段：检测圆心；第二阶段：利用圆心推导出圆半径
+
+```python
+circles = cv2.HoughCircles(image, method, dp, minDist, param1, param2, minRadius, maxRadius)
+# image 灰度图像
+# method 使用霍夫变换圆检测的算法，参数为 CV_HOUGH_GRADIENT
+# dp 霍夫空间的分辨率，dp=1时表示霍夫空间与输入图像空间的大小一致，dp=2时霍夫空间是输入图像空间的一半
+# minDist 圆心之间的最小距离，如果检测到的两个圆心之间的距离小于minDist，则认为是同一个圆心
+# param1 边缘检测时使用Canny算子的高阈值，低阈值是高阈值的一半
+# param2 检测圆心和确定半径时所共有的阈值
+# minRadius/maxRadius 为所检测到的圆半径的最小值和最大值
+
+# 步骤
+# 1. 读取图像，并转换为灰度图
+# 2. 进行中值滤波，去噪点
+# 3. 霍夫圆检测
+# 4. 将检测结果绘制在原图像上
+```
+
+## 图像特征提取与描述
+
+### 角点特征
+
+#### 1. 图像的特征
+
+### Harris和Shi-Tomas算法
+
+#### 1. Harris角点检测
+
+Harris 角点检测的思想是通过图像的局部的小窗口观察图像，角点的特征是窗口沿任意方向移动都会导致图像灰度的明显变化
+
+Harris 给出的角点计算方法是 计算一个 `角点响应值R` 来判断角点 （当R为整数且大于阈值则判定为角点）
+$$
+R= detM-\alpha(traceM)^2\\
+detM=\lambda_1\lambda2\\
+traceM=\lambda_1+\lambda2\\
+\\
+\left\{
+\begin{align}
+|R|=small,FLAT\\
+R<0,EDGE\\
+R>0,CORNER
+\end{align}
+\right.
+$$
+
+```python
+dist = cv2.cornerHarris(img, blockSize, ksize, k)
+
+# img float32类型的输入图像
+# blockSize 角点检测中需要考虑的邻域大小
+# ksize sobel求导使用的核大小
+# k 角点检测方程中的自由参数，取值参数为[0.04,0.06]
+```
+
+#### 2. Shi-Tomas算法
+
+若矩阵M的两个特征值中较小的一个大于阈值，则认为其为角点（即两个特征值都大于阈值）
+$$
+R=min(\lambda_1,\lambda_2)
+$$
+
+```python
+corners = cv.goodFeatureToTrack(image, maxcorners, qualityLevel, minDistance)
+
+# img 输入的灰度图像
+# maxCorners 获取角点数的数目
+# qualityLevel 该参数指出最低可接受的角点质量水平，在0-1之间
+# minDistance 角点之间最小的欧氏距离，避免得到相邻特征点
+
+# 将合格的角点按质量排序，然后删除相距较近的角点，并取前N个角点作为输出
+```
+
+
+
+### SIFT/SURF算法
+
+### Fast和ORB算发
+
+## 视频操作
+
+### 视频读写
+
+### 视频追踪
+
+## 案例：人脸识别
