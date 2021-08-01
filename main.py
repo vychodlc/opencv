@@ -1,5 +1,6 @@
 import cv2 as cv
 import numpy as np
+from matplotlib import pyplot as plt
 
 def readImg():
   im = cv.imread('image.jpg',0)
@@ -21,5 +22,60 @@ def draw():
   if k ==27:
     cv.destroyAllWindows()
 
+def hist():
+  img = cv.imread('image.jpg',0)
+  histr = cv.calcHist([img],[0],None,[256],[0,256])
+  plt.figure(figsize=(10,6),dpi=100)
+  plt.plot(histr)
+  plt.grid()
+  plt.show()
+
+def sobel():
+  img = cv.imread('image.jpg',0)
+  x = cv.Sobel(img, cv.CV_16S, 1, 0)
+  y = cv.Sobel(img, cv.CV_16S, 0, 1)
+  Scale_absX = cv.convertScaleAbs(x)
+  Scale_absY = cv.convertScaleAbs(y)
+  result = cv.addWeighted(Scale_absX, 0.5, Scale_absY, 0.5, 0)
+  plt.imshow(result,cmap=plt.cm.gray)
+  plt.show()
+  
+def laplacian():
+  img = cv.imread('image.jpg',0)
+  result = cv.Laplacian(img, cv.CV_16S)
+  Scale_abs = cv.convertScaleAbs(result)
+  plt.imshow(Scale_abs,cmap=plt.cm.gray)
+  plt.show()
+
+def canny():
+  img = cv.imread('image.jpg',0)
+  canny = cv.Canny(img, 0, 100)
+  plt.imshow(canny,cmap=plt.cm.gray)
+  plt.show()
+
+def match():
+  img = cv.imread('image2.jpg')
+  template = cv.imread('template3.jpg')
+  h,w = template.shape[:2]
+
+  res = cv.matchTemplate(img, template, cv.TM_CCORR)
+  min_val,max_val,min_loc,max_loc = cv.minMaxLoc(res)
+
+  top_left = max_loc
+  bottom_right = (top_left[0]+w,top_left[1]+h)
+
+  cv.rectangle(img,top_left,bottom_right,(0,255,0),2)
+
+  print(top_left,bottom_right)
+
+  plt.imshow(img[:,:,::-1])
+  plt.show()
+
+
 # readImg()
 # draw()
+# hist()
+# sobel()
+# laplacian()
+# canny()
+match()
