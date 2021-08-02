@@ -107,6 +107,82 @@ def corner_Shit_Tomas():
   plt.imshow(img[:,:,::-1])
   plt.show()
 
+def findMan():
+  img = cv.imread("wuli.jpg")  
+  gray = cv.cvtColor(img,cv.COLOR_BGR2GRAY)
+
+  face_cascade = cv.CascadeClassifier("haarcascade_frontalface_default.xml")  
+  eye_cascade = cv.CascadeClassifier("haarcascade_eye_tree_eyeglasses.xml")  
+    
+  faces = face_cascade.detectMultiScale(gray,1.6,10,cv.CASCADE_SCALE_IMAGE,(30,30))  
+
+  if len(faces)>0:  
+    for faceRect in faces:  
+      x,y,w,h = faceRect  
+      cv.rectangle(img,(x,y),(x+w,y+h),(255,0,0),10)  
+
+      roi_gray = gray[y:y+h,x:x+w]  
+      roi_color = img[y:y+h,x:x+w]  
+
+      eyes = eye_cascade.detectMultiScale(roi_gray,1.1,1,cv.CASCADE_SCALE_IMAGE,(2,2))  
+      for (ex,ey,ew,eh) in eyes:  
+        cv.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,255,0),2)  
+              
+  plt.imshow(img[:,:,::-1])
+  plt.show()
+
+def findManInVidel():
+  cap = cv.VideoCapture('dasima.mp4')
+
+  face_cascade = cv.CascadeClassifier("haarcascade_frontalface_default.xml")
+    
+  while True:
+    ret, frame = cap.read()
+    if not ret:
+      break
+    frame = cv.resize(frame, None, fx=0.5, fy=0.5)
+    gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+    face_zone = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=8)
+    for x, y, w, h in face_zone:
+      cv.rectangle(frame, pt1=(x, y), pt2=(x + w, y + h), color=[0, 0, 255], thickness=2)
+      cv.circle(frame, center=(x + w // 2, y + h // 2), radius=w // 2, color=[0, 255, 0], thickness=2)
+    cv.imshow('video', frame)
+    if ord('q') == cv.waitKey(40):
+      break
+
+  cv.destroyAllWindows()
+  cap.release()
+
+
+def camera():
+  # 识别电脑摄像头并打开
+  cap = cv.VideoCapture(1)
+  # 创建一个级联分类器 加载一个.xml分类器文件 它既可以是Haar特征也可以是LBP特征的分类器
+  face_detect = cv.CascadeClassifier("haarcascade_frontalface_default.xml")
+
+  while True:
+      # 读取视频片段
+      flag, frame = cap.read()
+      frame = cv.flip(frame, 1)
+      if not flag:   # 读完视频后falg返回False
+          break
+      # 灰度处理
+      gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+      # 多个尺度空间进行人脸检测   返回检测到的人脸区域坐标信息
+      face_zone = face_detect.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
+      # 绘制矩形和圆形检测人脸
+      for x, y, w, h in face_zone:
+          cv.rectangle(frame, pt1=(x, y), pt2=(x + w, y + h), color=[0, 0, 255], thickness=2)
+          cv.circle(frame, center=(x + w // 2, y + h // 2), radius=w // 2, color=[0, 255, 0], thickness=2)
+      # 显示图片
+      cv.imshow('video', frame)
+      # 设置退出键q 展示频率
+      if ord('q') == cv.waitKey(30):
+          break
+
+  # 释放资源
+  cv.destroyAllWindows()
+  cap.release()
 # readImg()
 # draw()
 # hist()
@@ -116,4 +192,7 @@ def corner_Shit_Tomas():
 # match()
 # houghCircle()
 # cornerHarris()
-corner_Shit_Tomas()
+# corner_Shit_Tomas()
+# findMan()
+# findManInVidel()
+camera()
